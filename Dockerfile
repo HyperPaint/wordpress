@@ -1,16 +1,21 @@
-FROM centos:7
+FROM hyperpaint/centos:7-base
 
 # Репозитории
 RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN	rpm -ivh http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+RUN rpm -ivh http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
 RUN yum-config-manager --enable remi-php82
 
-# PHP
+# PHP https://make.wordpress.org/hosting/handbook/server-environment/
+# WordPress
 # Веб-сервер
 # Прочее
-RUN yum -y install php php-zip php-dom php-xml php-mbstring php-gd php-mysql php-pgsql php-fileinfo php-bz2 php-intl php-ldap php-smbclient php-ftp php-imap php-bcmath php-gmp php-exif php-apcu php-memcached php-redis php-imagick php-pcntl php-phar php-pcre php-ssh2 php-sockets php-process php-opcache \
+RUN yum -y install php php-common php-mysql php-mysqlnd php-dom php-exif php-fileinfo php-pecl-igbinary php-imagick php-intl php-mbstring php-pcre php-xml php-zip \
+	php-apcu php-memcached php-opcache php-redis \
+	php-bcmath php-gd \
+	php-ssh2 php-ftp php-sockets \
+	curl ghostscript imagemagick openssl \
 	httpd \
-	curl tar unzip
+	tar unzip
 
 # Настроить php
 RUN sed -i 's/memory_limit = .*/memory_limit = 512M/g' /etc/php.ini && \
@@ -23,9 +28,6 @@ RUN sed -i 's/memory_limit = .*/memory_limit = 512M/g' /etc/php.ini && \
 RUN yum clean all
 # Удалить ненужные репозитории
 RUN rm -vrf /etc/yum.repos.d/*
-
-# Файлы
-COPY --chown=root:root --chmod=754 ./files/ /
 
 # Установка wordpress
 # https://ru.wordpress.org/download/releases/
@@ -58,6 +60,9 @@ RUN curl -vo /tmp/kadence.zip https://downloads.wordpress.org/theme/kadence.1.1.
 RUN unzip /tmp/kadence.zip -d /var/www/html/wp-content/themes/
 # Удалить ненужные файлы
 RUN rm -rf /tmp/*
+
+# Файлы
+COPY --chown=root:root --chmod=755 ./files/ /
 
 # Выдать права
 RUN chown -v apache:apache -R /var/www/html/
