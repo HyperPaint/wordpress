@@ -31,33 +31,15 @@ RUN rm -vrf /etc/yum.repos.d/*
 
 # Установка wordpress
 # https://ru.wordpress.org/download/releases/
-RUN curl -vo /tmp/wordpress.tar.gz https://ru.wordpress.org/wordpress-6.2-ru_RU.tar.gz
+RUN curl -vo /tmp/wordpress.tar.gz https://ru.wordpress.org/wordpress-6.4.2-ru_RU.tar.gz
 RUN tar -xzvf /tmp/wordpress.tar.gz -C /tmp/
 RUN mv -v /tmp/wordpress/* /var/www/html/
-# Удаление предустановленных плагинов / установка плагинов
-RUN rm -vrf /var/www/html/wp-content/plugins/* && cp -v /var/www/html/wp-content/themes/index.php /var/www/html/wp-content/plugins/index.php
-# APCu Manager
-RUN curl -vo /tmp/apcu-manager.zip https://downloads.wordpress.org/plugin/apcu-manager.3.7.2.zip
-RUN unzip /tmp/apcu-manager.zip -d /var/www/html/wp-content/plugins/
-# Disable WP REST API
-RUN curl -vo /tmp/disable-wp-rest-api.zip https://downloads.wordpress.org/plugin/disable-wp-rest-api.2.6.1.zip
-RUN unzip /tmp/disable-wp-rest-api.zip -d /var/www/html/wp-content/plugins/
-# Easy WP SMTP
-RUN curl -vo /tmp/easy-wp-smtp.zip https://downloads.wordpress.org/plugin/easy-wp-smtp.2.2.0.zip
-RUN unzip /tmp/easy-wp-smtp.zip -d /var/www/html/wp-content/plugins/
-# WP Super Cache
-RUN curl -vo /tmp/wp-super-cache.zip https://downloads.wordpress.org/plugin/wp-super-cache.1.11.0.zip
-RUN unzip /tmp/wp-super-cache.zip -d /var/www/html/wp-content/plugins/
-# Yoast SEO
-RUN curl -vo /tmp/wordpress-seo.zip https://downloads.wordpress.org/plugin/wordpress-seo.21.7.zip
-RUN unzip /tmp/wordpress-seo.zip -d /var/www/html/wp-content/plugins/
-# Quiz Maker - localhost
-RUN curl -vko /tmp/quiz-maker.zip https://192.168.1.100/quiz-maker-21.7.6.zip
-RUN unzip /tmp/quiz-maker.zip -d /var/www/html/wp-content/plugins/
-# Установка тем без удаления предустановленных
-# Kadence
-RUN curl -vo /tmp/kadence.zip https://downloads.wordpress.org/theme/kadence.1.1.50.zip
-RUN unzip /tmp/kadence.zip -d /var/www/html/wp-content/themes/
+
+# Удаление предустановленных плагинов
+RUN mv -v /var/www/html/wp-content/plugins/index.php /tmp/index.php
+RUN rm -vrf /var/www/html/wp-content/plugins/*
+RUN mv -v /tmp/index.php /var/www/html/wp-content/plugins/index.php
+
 # Удалить ненужные файлы
 RUN rm -rf /tmp/*
 
