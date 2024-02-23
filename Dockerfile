@@ -31,7 +31,7 @@ RUN rm -vrf /etc/yum.repos.d/*
 
 # Установка wordpress
 # https://ru.wordpress.org/download/releases/
-RUN curl -vo /tmp/wordpress.tar.gz https://ru.wordpress.org/wordpress-6.4.2-ru_RU.tar.gz
+RUN curl -vo /tmp/wordpress.tar.gz https://ru.wordpress.org/wordpress-6.4.3-ru_RU.tar.gz
 RUN tar -xzvf /tmp/wordpress.tar.gz -C /tmp/
 RUN mv -v /tmp/wordpress/* /var/www/html/
 

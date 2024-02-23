@@ -2,7 +2,7 @@
 
 repository=hyperpaint
 name=wordpress
-version=6.4.2
+version=6.4.3
 build=1
 
 docker build -t $repository/$name:$version .
