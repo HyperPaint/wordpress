@@ -1,61 +1,93 @@
-FROM hyperpaint/centos:7-base
+FROM centos-stream-container-base-9-20240729.0.x86_64:latest
 
 # Репозитории
-RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN rpm -ivh http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
-RUN yum-config-manager --enable remi-php82
+RUN yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+RUN /usr/bin/crb enable
+RUN yum -y install https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+RUN yum -y module enable php:remi-8.3
+
+RUN yum -y update && yum -y upgrade
 
 # PHP https://make.wordpress.org/hosting/handbook/server-environment/
-# WordPress
-# Веб-сервер
-# Прочее
-RUN yum -y install php php-common php-mysql php-mysqlnd php-dom php-exif php-fileinfo php-pecl-igbinary php-imagick php-intl php-mbstring php-pcre php-xml php-zip \
-	php-apcu php-memcached php-opcache php-redis \
-	php-bcmath php-gd \
-	php-ssh2 php-ftp php-sockets \
-	curl ghostscript imagemagick openssl \
-	httpd \
-	tar unzip
+# PHP 8.3
+# Required
+RUN yum -y install php \
+	php-json \
+	php-pdo \
+	php-mysqlnd
 
-# Настроить php
-RUN sed -i 's/memory_limit = .*/memory_limit = 512M/g' /etc/php.ini && \
+# Highly recommended
+RUN yum -y install \
+	php-curl \
+	php-dom \
+	php-exif \
+	php-fileinfo \
+	php-hash \
+	php-igbinary \
+	php-imagick \
+	php-intl \
+	php-mbstring \
+	php-openssl \
+	php-pcre \
+	php-xml \
+	php-zip
+
+# Recommended
+RUN yum -y install php-apcu php-memcached php-opcache php-redis
+
+# Optional
+# RUN yum -y install php-timezonedb
+
+# Completeness
+RUN yum -y install \
+	php-bcmath \
+	php-filter \
+	php-gd \
+	php-iconv \
+	php-shmop \
+	php-simplexml \
+	php-sodium \
+	php-xmlreader \
+	php-zlib
+
+# File changes
+RUN yum -y install php-ssh2 php-ftp php-sockets
+
+# System Packages
+RUN yum -y install --allowerasing curl ghostscript ImageMagick openssl libwebp libavif
+
+# PHP configure
+RUN echo 'apc.enable_cli = 1' >> /etc/php.ini && \
+    sed -i 's/max_execution_time = .*/max_execution_time = 3600/g' /etc/php.ini && \
+    sed -i 's/memory_limit = .*/memory_limit = 512M/g' /etc/php.ini && \
 	sed -i 's/post_max_size = .*/post_max_size = 1G/g' /etc/php.ini && \
 	sed -i 's/upload_max_filesize = .*/upload_max_filesize = 1G/g' /etc/php.ini && \
-	sed -i 's/output_buffering = .*/output_buffering = Off/g' /etc/php.ini && \
-	echo "apc.enable_cli = 1" >> /etc/php.ini
+    echo 'opcache.interned_strings_buffer = 10' >> /etc/php.ini
 
-# Очистить кэш
+# Apache Httpd
+RUN yum -y install httpd php-fpm
+RUN mkdir -p /run/php-fpm/
+
+# Other
+RUN yum -y install sudo procps psmisc bc
+
+# WordPress
+RUN chown apache:apache /var/www/html/
+COPY --chown=apache:apache --chmod=755 ./tmp/wordpress/ /var/www/html/
+
+COPY --chmod=755 ./files/ /
+
+# Уборка
 RUN yum clean all
-# Удалить ненужные репозитории
-RUN rm -vrf /etc/yum.repos.d/*
-
-# Установка wordpress
-# https://ru.wordpress.org/download/releases/
-RUN curl -vo /tmp/wordpress.tar.gz https://ru.wordpress.org/wordpress-6.4.3-ru_RU.tar.gz
-RUN tar -xzvf /tmp/wordpress.tar.gz -C /tmp/
-RUN mv -v /tmp/wordpress/* /var/www/html/
-
-# Удаление предустановленных плагинов
-RUN mv -v /var/www/html/wp-content/plugins/index.php /tmp/index.php
-RUN rm -vrf /var/www/html/wp-content/plugins/*
-RUN mv -v /tmp/index.php /var/www/html/wp-content/plugins/index.php
-
-# Удалить ненужные файлы
 RUN rm -rf /tmp/*
-
-# Файлы
-COPY --chown=root:root --chmod=755 ./files/ /
-
-# Выдать права
-RUN chown -v apache:apache -R /var/www/html/
 
 # Проверить
 RUN httpd -S
 
 EXPOSE 80
 
-# Запуск
-ENTRYPOINT ["/root/scripts/start.sh"]
+WORKDIR "/root/"
 
-# Готовность
+ENTRYPOINT ["/root/scripts/entrypoint.sh"]
+
 HEALTHCHECK CMD ["/root/scripts/healthcheck.sh"]
