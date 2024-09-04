@@ -14,7 +14,7 @@ unzip -q "./$file" -d "./$directory"
 repository="hyperpaint"
 name="wordpress"
 version="6.6.1"
-build="2"
+build="3"
 
 docker build -t "$repository/$name:$version" .
 docker tag "$repository/$name:$version" "$repository/$name:$version-$build"
