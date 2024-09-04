@@ -2,3 +2,4 @@
 
 php-fpm -F &
 httpd -DFOREGROUND &
+~/scripts/cron.sh &
